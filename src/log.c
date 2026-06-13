@@ -30,16 +30,13 @@ static daft_status_t daft_log_lookup(daft_log_id_t id, daft_log_msg_t *out)
             break;
         case DAFT_LOG_ID_USAGE:
             out->text =
-                "usage: daft [--config FILE] [--midi-out PATH] [--seed N]\n"
+                "usage: daft [--midi-out PATH] [--seed N]\n"
                 "            [--root 0..11] [--mood bright|dark]\n"
                 "            [--density PERCENT] [--simulate TRACE]\n"
                 "            [--sim-minutes N]";
             break;
         case DAFT_LOG_ID_CONFIG_BAD_ARG:
             out->text = "daft: invalid configuration argument";
-            break;
-        case DAFT_LOG_ID_CONFIG_FILE_ERROR:
-            out->text = "daft: configuration file error";
             break;
         case DAFT_LOG_ID_MIDI_OPEN_FAILED:
             out->text = "daft: failed to open MIDI output";

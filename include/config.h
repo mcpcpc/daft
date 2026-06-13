@@ -27,9 +27,7 @@ typedef struct
 daft_status_t daft_config_default(daft_config_t *cfg);
 
 /* Apply command-line options in order; later options override earlier ones.
- * --config FILE loads key=value pairs (keys: midi_path, seed, root,
- * mood (bright|dark), density_percent); unknown keys are rejected.
- * Options: --config FILE, --midi-out PATH, --seed N, --root N(0..11),
+ * Options: --midi-out PATH, --seed N, --root N(0..11),
  * --mood bright|dark, --density PERCENT, --simulate TRACE,
  * --sim-minutes N. */
 daft_status_t daft_config_parse_args(daft_config_t *cfg, int argc,

@@ -3,8 +3,6 @@
 daft \- generative ambient MIDI engine driven by system resources
 .SH SYNOPSIS
 .B daft
-.RB [ \-\-config
-.IR FILE ]
 .RB [ \-\-midi\-out
 .IR PATH ]
 .RB [ \-\-seed
@@ -59,12 +57,6 @@ to the path given by
 links against no MIDI or audio libraries. Route the stream to any
 General MIDI capable synthesizer.
 .SH OPTIONS
-.TP
-.BI \-\-config " FILE"
-Read key=value configuration from
-.I FILE
-(see
-.BR CONFIGURATION ).
 Options are applied in command-line order; later options override
 earlier ones.
 .TP
@@ -106,20 +98,6 @@ Simulated duration in minutes, 1\(en6000. Defaults to 480 (eight hours)
 when
 .B \-\-simulate
 is given.
-.SH CONFIGURATION
-The file named by
-.B \-\-config
-holds one
-.B key = value
-pair per line; blank lines and lines starting with
-.B #
-are ignored. Keys:
-.BR midi_path ,
-.BR seed ,
-.BR root ,
-.BR mood ,
-.BR density_percent .
-Unknown keys are rejected.
 .SH TRACE FORMAT
 Each simulation trace line holds five comma-separated unsigned integers:
 .PP

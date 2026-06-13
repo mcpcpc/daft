@@ -42,9 +42,9 @@ device, a FIFO, or a plain file.
 SIGINT/SIGTERM shut down cleanly: every sounding note is released and
 CC123 (All Notes Off) is sent on every channel.
 
-Options: `--config FILE`, `--midi-out PATH`, `--seed N`, `--root 0..11`,
+Options: `--midi-out PATH`, `--seed N`, `--root 0..11`,
 `--mood bright|dark`, `--density 25..400`, `--simulate TRACE`,
-`--sim-minutes N`. See `daft.conf.example` for the config file keys.
+`--sim-minutes N`. See `daft.1` for full documentation.
 
 ## Simulate (deterministic fast-forward)
 

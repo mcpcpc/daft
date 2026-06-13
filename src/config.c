@@ -3,8 +3,6 @@
 #include "config.h"
 #include "util.h"
 
-#define DAFT_CONFIG_FILE_CAP 4096u
-#define DAFT_CONFIG_KEY_MAX 32u
 #define DAFT_CONFIG_DEFAULT_SEED 0xDA47C0DE5EEDULL
 #define DAFT_CONFIG_DEFAULT_SIM_MINUTES 480u
 
@@ -152,147 +150,6 @@ static daft_status_t daft_config_set_seed(daft_config_t *cfg,
     return status;
 }
 
-static daft_status_t daft_config_apply_kv(daft_config_t *cfg,
-                                          const char *key, const char *value)
-{
-    daft_status_t status;
-
-    if (daft_str_eq(key, "midi_path", DAFT_CONFIG_KEY_MAX) == 1)
-    {
-        status = daft_util_str_copy(cfg->midi_path, sizeof(cfg->midi_path),
-                                    value, DAFT_CONFIG_PATH_MAX);
-    }
-    else if (daft_str_eq(key, "seed", DAFT_CONFIG_KEY_MAX) == 1)
-    {
-        status = daft_config_set_seed(cfg, value);
-    }
-    else if (daft_str_eq(key, "root", DAFT_CONFIG_KEY_MAX) == 1)
-    {
-        status = daft_config_set_root(cfg, value);
-    }
-    else if (daft_str_eq(key, "mood", DAFT_CONFIG_KEY_MAX) == 1)
-    {
-        status = daft_config_set_mood(cfg, value);
-    }
-    else if (daft_str_eq(key, "density_percent", DAFT_CONFIG_KEY_MAX) == 1)
-    {
-        status = daft_config_set_density(cfg, value);
-    }
-    else
-    {
-        status = DAFT_STATUS_FORMAT_ERROR;
-    }
-    return status;
-}
-
-/* Extract one line [start, end) from buf as key=value and apply it.
- * Blank lines and '#' comments are ignored. */
-static daft_status_t daft_config_apply_line(daft_config_t *cfg,
-                                            const char *buf, size_t start,
-                                            size_t end)
-{
-    char key[DAFT_CONFIG_KEY_MAX];
-    char value[DAFT_CONFIG_PATH_MAX];
-    size_t pos = start;
-    size_t key_len = 0u;
-    size_t value_len = 0u;
-    daft_status_t status = daft_util_skip_ws(buf, end, &pos);
-
-    if (status != DAFT_STATUS_OK)
-    {
-        return status;
-    }
-    if ((pos >= end) || (buf[pos] == '#'))
-    {
-        return DAFT_STATUS_OK;
-    }
-
-    /* Key: up to '='. Bounded by key buffer. */
-    while ((pos < end) && (buf[pos] != '=') && (buf[pos] != ' ') &&
-           (buf[pos] != '\t'))
-    {
-        if (key_len >= (DAFT_CONFIG_KEY_MAX - 1u))
-        {
-            return DAFT_STATUS_FORMAT_ERROR;
-        }
-        key[key_len] = buf[pos];
-        key_len++;
-        pos++;
-    }
-    key[key_len] = '\0';
-
-    status = daft_util_skip_ws(buf, end, &pos);
-    if ((status != DAFT_STATUS_OK) || (pos >= end) || (buf[pos] != '='))
-    {
-        return DAFT_STATUS_FORMAT_ERROR;
-    }
-    pos++;
-    status = daft_util_skip_ws(buf, end, &pos);
-    if (status != DAFT_STATUS_OK)
-    {
-        return status;
-    }
-
-    /* Value: to end of line, trailing CR/space trimmed. Bounded by buffer. */
-    while (pos < end)
-    {
-        if (value_len >= (DAFT_CONFIG_PATH_MAX - 1u))
-        {
-            return DAFT_STATUS_FORMAT_ERROR;
-        }
-        value[value_len] = buf[pos];
-        value_len++;
-        pos++;
-    }
-    while ((value_len > 0u) && ((value[value_len - 1u] == '\r') ||
-                                (value[value_len - 1u] == ' ') ||
-                                (value[value_len - 1u] == '\t')))
-    {
-        value_len--;
-    }
-    value[value_len] = '\0';
-
-    return daft_config_apply_kv(cfg, key, value);
-}
-
-/* Load key=value pairs from a config file (bounded size). Unknown keys
- * are rejected. */
-static daft_status_t daft_config_load_file(daft_config_t *cfg,
-                                           const char *path)
-{
-    char buf[DAFT_CONFIG_FILE_CAP];
-    size_t len = 0u;
-    size_t line_start = 0u;
-    size_t i;
-    daft_status_t status;
-
-    if ((cfg == NULL) || (path == NULL))
-    {
-        return DAFT_STATUS_INVALID_ARGUMENT;
-    }
-
-    status = daft_util_read_file(path, buf, sizeof(buf), &len);
-    if (status != DAFT_STATUS_OK)
-    {
-        return status;
-    }
-
-    /* Bounded by buffer length. */
-    for (i = 0u; i <= len; i++)
-    {
-        if ((i == len) || (buf[i] == '\n'))
-        {
-            status = daft_config_apply_line(cfg, buf, line_start, i);
-            if (status != DAFT_STATUS_OK)
-            {
-                return status;
-            }
-            line_start = i + 1u;
-        }
-    }
-    return DAFT_STATUS_OK;
-}
-
 daft_status_t daft_config_parse_args(daft_config_t *cfg, int argc,
                                      char **argv)
 {
@@ -314,10 +171,6 @@ daft_status_t daft_config_parse_args(daft_config_t *cfg, int argc,
         if (val == NULL)
         {
             status = DAFT_STATUS_FORMAT_ERROR;
-        }
-        else if (daft_str_eq(opt, "--config", 16u) == 1)
-        {
-            status = daft_config_load_file(cfg, val);
         }
         else if (daft_str_eq(opt, "--midi-out", 16u) == 1)
         {
