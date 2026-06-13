@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stddef.h>
 
-#include "daft_conductor.h"
+#include "conductor.h"
 
 #define DAFT_PENT_DEGREES 5u
 #define DAFT_CAND_CAP 32u

@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include <unistd.h>
 
-#include "daft_log.h"
-#include "daft_util.h"
+#include "log.h"
+#include "util.h"
 
 #define DAFT_LOG_FD 2 /* standard error */
 

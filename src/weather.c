@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "daft_weather.h"
+#include "weather.h"
 
 #define DAFT_WEATHER_BUCKETS 30u
 #define DAFT_WEATHER_BUCKET_MS 60000u

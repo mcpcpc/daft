@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "daft_rng.h"
+#include "rng.h"
 
 /* xorshift64* multiplier (Vigna, "An experimental exploration of
  * Marsaglia's xorshift generators"). */

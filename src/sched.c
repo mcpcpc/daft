@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "daft_sched.h"
+#include "sched.h"
 
 daft_status_t daft_sched_init(daft_sched_t *sched)
 {

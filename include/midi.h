@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "daft_status.h"
+#include "status.h"
 
 /*
  * MIDI output. Two sinks share one event API:

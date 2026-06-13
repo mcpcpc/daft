@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "daft_metrics.h"
-#include "daft_status.h"
+#include "metrics.h"
+#include "status.h"
 
 /*
  * The "weather" system: raw metric samples are smoothed with per-metric

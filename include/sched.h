@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "daft_status.h"
+#include "status.h"
 
 /*
  * Bounded static queue of pending note onsets. Note-offs are not queued

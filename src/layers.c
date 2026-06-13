@@ -1,8 +1,8 @@
 #include <stddef.h>
 
-#include "daft_conductor.h"
-#include "daft_layers.h"
-#include "daft_log.h"
+#include "conductor.h"
+#include "layers.h"
+#include "log.h"
 
 #define DAFT_LAYER_COUNT 5u
 #define DAFT_RECENT_CAP 8u

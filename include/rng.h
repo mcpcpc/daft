@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "daft_status.h"
+#include "status.h"
 
 /*
  * Deterministic, explicitly seeded PRNG (xorshift64*). Not cryptographic;

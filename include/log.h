@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "daft_status.h"
+#include "status.h"
 
 /*
  * Deterministic bounded logging: fixed message IDs, fixed format strings,

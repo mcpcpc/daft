@@ -3,8 +3,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "daft_midi.h"
-#include "daft_util.h"
+#include "midi.h"
+#include "util.h"
 
 #define DAFT_MIDI_MAX_DELTA 0x0FFFFFFFu
 #define DAFT_MIDI_SMF_LEN_OFFSET 18

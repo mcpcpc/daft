@@ -1,7 +1,7 @@
 #include <stddef.h>
 
-#include "daft_config.h"
-#include "daft_util.h"
+#include "config.h"
+#include "util.h"
 
 #define DAFT_CONFIG_FILE_CAP 4096u
 #define DAFT_CONFIG_KEY_MAX 32u

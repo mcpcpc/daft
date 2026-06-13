@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "daft_midi.h"
-#include "daft_status.h"
+#include "midi.h"
+#include "status.h"
 
 /*
  * Active-note table. Enforces polyphony caps by releasing the oldest

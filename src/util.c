@@ -2,7 +2,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "daft_util.h"
+#include "util.h"
 
 #define DAFT_UTIL_MAX_WRITE_ATTEMPTS 16u
 #define DAFT_UTIL_MAX_READ_ATTEMPTS 16u

@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "daft_status.h"
+#include "status.h"
 
 /* Bounded write of an entire buffer to a file descriptor (EINTR-safe,
  * bounded retry count). */

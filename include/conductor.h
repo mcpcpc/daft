@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-#include "daft_rng.h"
-#include "daft_status.h"
-#include "daft_weather.h"
+#include "rng.h"
+#include "status.h"
+#include "weather.h"
 
 /*
  * The Conductor owns global musical state - the "garden", not the plants.

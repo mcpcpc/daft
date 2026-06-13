@@ -4,8 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "daft_metrics.h"
-#include "daft_util.h"
+#include "metrics.h"
+#include "util.h"
 
 #define DAFT_METRICS_FILE_CAP 16384u
 #define DAFT_METRICS_CPU_FIELDS 10u

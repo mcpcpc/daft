@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "daft_status.h"
+#include "status.h"
 
 /*
  * System metric sampling behind a portability layer (AGENTS.md POSIX rule):

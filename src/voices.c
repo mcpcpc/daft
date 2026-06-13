@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "daft_voices.h"
+#include "voices.h"
 
 daft_status_t daft_voices_init(daft_voices_t *voices)
 {

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "daft_status.h"
+#include "status.h"
 
 #define DAFT_CONFIG_PATH_MAX 256u
 

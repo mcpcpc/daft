@@ -7,7 +7,7 @@
 /* cppcheck-suppress misra-c2012-21.10 ; DEV-001 */
 #include <time.h>
 
-#include "daft_dtime.h"
+#include "dtime.h"
 
 #define DAFT_TIME_MAX_SLEEP_RETRIES 8u
 

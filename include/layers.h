@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-#include "daft_rng.h"
-#include "daft_sched.h"
-#include "daft_status.h"
+#include "rng.h"
+#include "sched.h"
+#include "status.h"
 
 /*
  * The voice layers - independent cyclic state machines with mutually

@@ -9,17 +9,17 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "daft_conductor.h"
-#include "daft_config.h"
-#include "daft_dtime.h"
-#include "daft_layers.h"
-#include "daft_log.h"
-#include "daft_metrics.h"
-#include "daft_midi.h"
-#include "daft_rng.h"
-#include "daft_sched.h"
-#include "daft_voices.h"
-#include "daft_weather.h"
+#include "conductor.h"
+#include "config.h"
+#include "dtime.h"
+#include "layers.h"
+#include "log.h"
+#include "metrics.h"
+#include "midi.h"
+#include "rng.h"
+#include "sched.h"
+#include "voices.h"
+#include "weather.h"
 
 #define DAFT_TICK_MS 50u
 #define DAFT_SAMPLE_INTERVAL_MS 1000u
