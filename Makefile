@@ -1,7 +1,7 @@
 # daft - generative ambient MIDI engine driven by system resources.
 # Build rules per AGENTS.md: ISO C99, POSIX, warnings as errors, MISRA analysis.
 
-CC := gcc
+include config.mk
 
 CFLAGS := -std=c99
 CFLAGS += -pedantic
@@ -29,7 +29,7 @@ TARGET := daft
 # it is still built with the full production flag set.
 TOOLS := tools/smfcheck
 
-.PHONY: all clean analyze
+.PHONY: all clean analyze install uninstall
 
 all: $(TARGET) $(TOOLS)
 
@@ -60,6 +60,18 @@ analyze:
 	    --addon=misra.json \
 	    -Iinclude \
 	    src include
+
+install: $(TARGET)
+	mkdir -p $(DESTDIR)$(BINDIR)
+	cp -f $(TARGET) $(DESTDIR)$(BINDIR)
+	chmod 755 $(DESTDIR)$(BINDIR)/$(TARGET)
+	mkdir -p $(DESTDIR)$(MANDIR)/man1
+	cp -f daft.1 $(DESTDIR)$(MANDIR)/man1
+	chmod 644 $(DESTDIR)$(MANDIR)/man1/daft.1
+
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/$(TARGET)
+	rm -f $(DESTDIR)$(MANDIR)/man1/daft.1
 
 clean:
 	rm -f $(OBJ) $(TARGET) $(TOOLS)
