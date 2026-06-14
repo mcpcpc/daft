@@ -18,15 +18,13 @@ static size_t daft_midi_vlq(uint32_t value, uint8_t out[4])
     size_t count = 0u;
 
     /* Bounded: at most 4 seven-bit groups for a 28-bit value. */
-    do
-    {
+    do {
         groups[count] = (uint8_t)(v & 0x7Fu);
         v >>= 7;
         count++;
     } while ((v > 0u) && (count < 4u));
 
-    while (count > 0u)
-    {
+    while (count > 0u) {
         count--;
         out[n] = (count > 0u) ? (uint8_t)(groups[count] | 0x80u)
                               : groups[count];
@@ -40,8 +38,7 @@ static daft_status_t daft_midi_emit(daft_midi_t *midi, uint64_t t_ms,
 {
     daft_status_t status;
 
-    if (midi->sink == DAFT_MIDI_SINK_SMF)
-    {
+    if (midi->sink == DAFT_MIDI_SINK_SMF) {
         uint8_t delta_buf[4];
         uint64_t delta64 = (t_ms > midi->last_ms) ? (t_ms - midi->last_ms)
                                                   : 0u;
@@ -51,18 +48,14 @@ static daft_status_t daft_midi_emit(daft_midi_t *midi, uint64_t t_ms,
         size_t delta_len = daft_midi_vlq(delta, delta_buf);
 
         status = daft_util_write_all(midi->fd, delta_buf, delta_len);
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             status = daft_util_write_all(midi->fd, bytes, n);
         }
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             midi->track_len += (uint32_t)delta_len + (uint32_t)n;
             midi->last_ms = (midi->last_ms > t_ms) ? midi->last_ms : t_ms;
         }
-    }
-    else
-    {
+    } else {
         status = daft_util_write_all(midi->fd, bytes, n);
     }
     return status;
@@ -87,8 +80,7 @@ daft_status_t daft_midi_open(daft_midi_t *midi, daft_midi_sink_t sink,
     daft_status_t status = DAFT_STATUS_OK;
 
     if ((midi == NULL) || (path == NULL) ||
-        ((sink != DAFT_MIDI_SINK_STREAM) && (sink != DAFT_MIDI_SINK_SMF)))
-    {
+        ((sink != DAFT_MIDI_SINK_STREAM) && (sink != DAFT_MIDI_SINK_SMF))) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
 
@@ -96,40 +88,30 @@ daft_status_t daft_midi_open(daft_midi_t *midi, daft_midi_sink_t sink,
     midi->last_ms = 0u;
     midi->track_len = 0u;
 
-    if (sink == DAFT_MIDI_SINK_SMF)
-    {
+    if (sink == DAFT_MIDI_SINK_SMF) {
         midi->fd = open(path, O_WRONLY | O_CREAT | O_TRUNC,
                         S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    }
-    else
-    {
+    } else {
         midi->fd = open(path, O_WRONLY);
     }
-    if (midi->fd < 0)
-    {
+    if (midi->fd < 0) {
         return DAFT_STATUS_IO_ERROR;
     }
 
-    if (sink == DAFT_MIDI_SINK_SMF)
-    {
+    if (sink == DAFT_MIDI_SINK_SMF) {
         status = daft_util_write_all(midi->fd, k_smf_header,
                                      sizeof(k_smf_header));
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             status = daft_util_write_all(midi->fd, k_smf_track_header,
                                          sizeof(k_smf_track_header));
         }
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             status = daft_util_write_all(midi->fd, k_smf_tempo,
                                          sizeof(k_smf_tempo));
         }
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             midi->track_len = (uint32_t)sizeof(k_smf_tempo);
-        }
-        else
-        {
+        } else {
             (void)close(midi->fd);
             midi->fd = -1;
         }
@@ -144,8 +126,7 @@ static daft_status_t daft_midi_msg3(daft_midi_t *midi, uint64_t t_ms,
     uint8_t msg[3];
 
     if ((midi == NULL) || (midi->fd < 0) || (ch > 15u) || (d1 > 127u) ||
-        (d2 > 127u))
-    {
+        (d2 > 127u)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
     msg[0] = (uint8_t)(hi | ch);
@@ -177,8 +158,7 @@ daft_status_t daft_midi_program(daft_midi_t *midi, uint64_t t_ms, uint8_t ch,
 {
     uint8_t msg[2];
 
-    if ((midi == NULL) || (midi->fd < 0) || (ch > 15u) || (program > 127u))
-    {
+    if ((midi == NULL) || (midi->fd < 0) || (ch > 15u) || (program > 127u)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
     msg[0] = (uint8_t)(0xC0u | ch);
@@ -194,17 +174,14 @@ daft_status_t daft_midi_close(daft_midi_t *midi, uint64_t t_ms)
     };
     daft_status_t status = DAFT_STATUS_OK;
 
-    if ((midi == NULL) || (midi->fd < 0))
-    {
+    if ((midi == NULL) || (midi->fd < 0)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
 
-    if (midi->sink == DAFT_MIDI_SINK_SMF)
-    {
+    if (midi->sink == DAFT_MIDI_SINK_SMF) {
         status = daft_midi_emit(midi, t_ms, k_smf_end_of_track,
                                 sizeof(k_smf_end_of_track));
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             uint8_t len_be[4];
 
             len_be[0] = (uint8_t)((midi->track_len >> 24) & 0xFFu);
@@ -216,19 +193,15 @@ daft_status_t daft_midi_close(daft_midi_t *midi, uint64_t t_ms)
              * <unistd.h> (POSIX); the analyzer does not expand system
              * headers. */
             if (lseek(midi->fd, (off_t)DAFT_MIDI_SMF_LEN_OFFSET, SEEK_SET) ==
-                (off_t)-1)
-            {
+                (off_t)-1) {
                 status = DAFT_STATUS_IO_ERROR;
-            }
-            else
-            {
+            } else {
                 status = daft_util_write_all(midi->fd, len_be, 4u);
             }
         }
     }
 
-    if (close(midi->fd) != 0)
-    {
+    if (close(midi->fd) != 0) {
         status = DAFT_STATUS_IO_ERROR;
     }
     midi->fd = -1;

@@ -75,11 +75,9 @@ static size_t daft_layers_recent_count(uint64_t now)
                            : 0u;
 
     /* Bounded by DAFT_RECENT_CAP. */
-    for (i = 0u; i < DAFT_RECENT_CAP; i++)
-    {
+    for (i = 0u; i < DAFT_RECENT_CAP; i++) {
         if ((g_layers.recent_onset[i] != 0u) &&
-            (g_layers.recent_onset[i] >= horizon))
-        {
+            (g_layers.recent_onset[i] >= horizon)) {
             count++;
         }
     }
@@ -90,19 +88,16 @@ daft_status_t daft_layers_init(daft_rng_t *rng, uint64_t now)
 {
     size_t i;
 
-    if (rng == NULL)
-    {
+    if (rng == NULL) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
 
     /* Stagger first cycles randomly so layers never start aligned. */
-    for (i = 0u; i < DAFT_LAYER_COUNT; i++)
-    {
+    for (i = 0u; i < DAFT_LAYER_COUNT; i++) {
         uint32_t stagger = 0u;
         daft_status_t status = daft_rng_range(rng, k_layer[i].period_ms,
                                               &stagger);
-        if (status != DAFT_STATUS_OK)
-        {
+        if (status != DAFT_STATUS_OK) {
             return status;
         }
         /* First events within the first half-period, plus a short
@@ -111,8 +106,7 @@ daft_status_t daft_layers_init(daft_rng_t *rng, uint64_t now)
                                           ((uint64_t)stagger / 2u);
         g_layers.layer[i].last_note = DAFT_NO_NOTE;
     }
-    for (i = 0u; i < DAFT_RECENT_CAP; i++)
-    {
+    for (i = 0u; i < DAFT_RECENT_CAP; i++) {
         g_layers.recent_onset[i] = 0u;
     }
     g_layers.recent_idx = 0u;
@@ -129,16 +123,13 @@ static void daft_layers_shift_window(const daft_layer_cfg_t *cfg, int shift,
     int new_lo = (int)cfg->lo + s;
     int new_hi = (int)cfg->hi + s;
 
-    if (new_lo < 0)
-    {
+    if (new_lo < 0) {
         new_lo = 0;
     }
-    if (new_hi > 127)
-    {
+    if (new_hi > 127) {
         new_hi = 127;
     }
-    if (new_hi < (new_lo + 12))
-    {
+    if (new_hi < (new_lo + 12)) {
         new_hi = new_lo + 12; /* keep at least an octave of candidates */
     }
     *lo = (uint8_t)new_lo;
@@ -159,8 +150,7 @@ static daft_status_t daft_layers_schedule(uint64_t now, daft_rng_t *rng,
                                           (cfg->period_ms * 15u) / 100u,
                                           &jitter);
 
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
     onset = now + (uint64_t)jitter;
@@ -168,30 +158,25 @@ static daft_status_t daft_layers_schedule(uint64_t now, daft_rng_t *rng,
     /* Coincidence damping: near-simultaneity that is not a deliberate
      * chord sounds like an error - push the onset away. */
     status = daft_sched_onset_near(sched, onset, DAFT_COINCIDENCE_MS, &near);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
-    if (near == 1)
-    {
+    if (near == 1) {
         uint32_t push = 0u;
         status = daft_rng_range(rng, 1500u, &push);
-        if (status != DAFT_STATUS_OK)
-        {
+        if (status != DAFT_STATUS_OK) {
             return status;
         }
         onset += 500u + (uint64_t)push;
     }
 
     status = daft_sched_push(sched, onset, cfg->ch, note, velocity, dur_ms);
-    if (status == DAFT_STATUS_FULL)
-    {
+    if (status == DAFT_STATUS_FULL) {
         /* Degrade safely: drop the note, keep playing. */
         (void)daft_log_write(DAFT_LOG_ID_SCHED_FULL); /* LOG-1 */
         status = DAFT_STATUS_OK;
     }
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         daft_layers_record_onset(onset);
     }
     return status;
@@ -209,30 +194,25 @@ static daft_status_t daft_layers_cycle(uint64_t now, daft_rng_t *rng,
 
     /* Emission probability: the weather scales the garden's liveliness. */
     p_eff = cfg->base_p * params->density;
-    if (cfg->is_drone == 1u)
-    {
+    if (cfg->is_drone == 1u) {
         /* The drone is what makes randomness sound intentional. */
         p_eff = (p_eff < 0.85) ? 0.85 : p_eff;
     }
-    if (p_eff > 0.97)
-    {
+    if (p_eff > 0.97) {
         p_eff = 0.97;
     }
 
     /* Post-flurry calm: silence shaped deliberately reads as intention. */
     if ((cfg->is_drone == 0u) &&
-        (daft_layers_recent_count(now) >= DAFT_FLURRY_LIMIT))
-    {
+        (daft_layers_recent_count(now) >= DAFT_FLURRY_LIMIT)) {
         return DAFT_STATUS_OK;
     }
 
     status = daft_rng_unit(rng, &roll);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
-    if (roll >= p_eff)
-    {
+    if (roll >= p_eff) {
         return DAFT_STATUS_OK; /* silence, a first-class output */
     }
 
@@ -245,18 +225,14 @@ static daft_status_t daft_layers_cycle(uint64_t now, daft_rng_t *rng,
         uint8_t velocity;
         uint32_t dur_ms;
 
-        if (cfg->is_drone == 1u)
-        {
+        if (cfg->is_drone == 1u) {
             status = daft_conductor_choose_drone(rng, &note);
-        }
-        else
-        {
+        } else {
             daft_layers_shift_window(cfg, params->register_shift, &lo, &hi);
             status = daft_conductor_choose_note(rng, st->last_note, lo, hi,
                                                 &note);
         }
-        if (status != DAFT_STATUS_OK)
-        {
+        if (status != DAFT_STATUS_OK) {
             return status;
         }
 
@@ -264,24 +240,21 @@ static daft_status_t daft_layers_cycle(uint64_t now, daft_rng_t *rng,
                                 ((uint32_t)cfg->vel_hi -
                                  (uint32_t)cfg->vel_lo) + 1u,
                                 &vel_span);
-        if (status != DAFT_STATUS_OK)
-        {
+        if (status != DAFT_STATUS_OK) {
             return status;
         }
         velocity = (uint8_t)((uint32_t)cfg->vel_lo + vel_span);
 
         status = daft_rng_range(rng, (cfg->dur_hi_ms - cfg->dur_lo_ms) + 1u,
                                 &dur_span);
-        if (status != DAFT_STATUS_OK)
-        {
+        if (status != DAFT_STATUS_OK) {
             return status;
         }
         dur_ms = cfg->dur_lo_ms + dur_span;
 
         status = daft_layers_schedule(now, rng, sched, cfg, note, velocity,
                                       dur_ms);
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             st->last_note = note;
         }
     }
@@ -295,36 +268,29 @@ daft_status_t daft_layers_tick(uint64_t now, daft_rng_t *rng,
     daft_conductor_params_t params;
     daft_status_t status;
 
-    if ((rng == NULL) || (sched == NULL))
-    {
+    if ((rng == NULL) || (sched == NULL)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
-    if (g_layers.initialized == 0)
-    {
+    if (g_layers.initialized == 0) {
         return DAFT_STATUS_UNAVAILABLE;
     }
 
     status = daft_conductor_params(&params);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
 
     /* Bounded by DAFT_LAYER_COUNT. */
-    for (i = 0u; i < DAFT_LAYER_COUNT; i++)
-    {
-        if (now >= g_layers.layer[i].next_cycle_ms)
-        {
+    for (i = 0u; i < DAFT_LAYER_COUNT; i++) {
+        if (now >= g_layers.layer[i].next_cycle_ms) {
             status = daft_layers_cycle(now, rng, sched, i, &params);
-            if (status != DAFT_STATUS_OK)
-            {
+            if (status != DAFT_STATUS_OK) {
                 return status;
             }
             /* One decision point per cycle; if the process stalled past
              * several periods, re-anchor instead of replaying them. */
             g_layers.layer[i].next_cycle_ms += k_layer[i].period_ms;
-            if (g_layers.layer[i].next_cycle_ms <= now)
-            {
+            if (g_layers.layer[i].next_cycle_ms <= now) {
                 g_layers.layer[i].next_cycle_ms =
                     now + k_layer[i].period_ms;
             }
@@ -341,33 +307,27 @@ daft_status_t daft_layers_chime(uint64_t now, double magnitude,
     double mag = magnitude;
     daft_status_t status;
 
-    if ((rng == NULL) || (sched == NULL))
-    {
+    if ((rng == NULL) || (sched == NULL)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
-    if (g_layers.initialized == 0)
-    {
+    if (g_layers.initialized == 0) {
         return DAFT_STATUS_UNAVAILABLE;
     }
 
-    if (mag < 0.0)
-    {
+    if (mag < 0.0) {
         mag = 0.0;
     }
-    if (mag > 1.0)
-    {
+    if (mag > 1.0) {
         mag = 1.0;
     }
 
     /* Probabilistic, never 1:1 - the chime stays a distant suggestion. */
     p = 0.35 + (0.6 * mag);
     status = daft_rng_unit(rng, &roll);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
-    if (roll >= p)
-    {
+    if (roll >= p) {
         return DAFT_STATUS_OK;
     }
 
@@ -380,31 +340,26 @@ daft_status_t daft_layers_chime(uint64_t now, double magnitude,
         status = daft_conductor_choose_note(rng, g_layers.chime_last_note,
                                             DAFT_CHIME_LO, DAFT_CHIME_HI,
                                             &note);
-        if (status != DAFT_STATUS_OK)
-        {
+        if (status != DAFT_STATUS_OK) {
             return status;
         }
         status = daft_rng_range(rng, 400u, &delay);
-        if (status != DAFT_STATUS_OK)
-        {
+        if (status != DAFT_STATUS_OK) {
             return status;
         }
         status = daft_rng_range(rng, 2500u, &dur_span);
-        if (status != DAFT_STATUS_OK)
-        {
+        if (status != DAFT_STATUS_OK) {
             return status;
         }
         velocity = (uint8_t)(25u + (uint32_t)(mag * 25.0));
 
         status = daft_sched_push(sched, now + (uint64_t)delay, DAFT_CHIME_CH,
                                  note, velocity, 1500u + dur_span);
-        if (status == DAFT_STATUS_FULL)
-        {
+        if (status == DAFT_STATUS_FULL) {
             (void)daft_log_write(DAFT_LOG_ID_SCHED_FULL); /* LOG-1 */
             status = DAFT_STATUS_OK;
         }
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             g_layers.chime_last_note = note;
         }
     }

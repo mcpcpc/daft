@@ -17,8 +17,7 @@ static daft_status_t daft_log_lookup(daft_log_id_t id, daft_log_msg_t *out)
 {
     daft_status_t status = DAFT_STATUS_OK;
 
-    switch (id)
-    {
+    switch (id) {
         case DAFT_LOG_ID_STARTUP:
             out->text = "daft: started";
             break;
@@ -70,12 +69,10 @@ static daft_status_t daft_log_lookup(daft_log_id_t id, daft_log_msg_t *out)
             break;
     }
 
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         size_t n = 0u;
         /* Bounded: longest fixed message is well under 256 bytes. */
-        while ((n < 255u) && (out->text[n] != '\0'))
-        {
+        while ((n < 255u) && (out->text[n] != '\0')) {
             n++;
         }
         out->len = n;
@@ -90,13 +87,11 @@ static daft_status_t daft_log_emit(const daft_log_msg_t *msg,
     size_t pos = 0u;
     size_t i;
 
-    for (i = 0u; (i < msg->len) && (pos < 280u); i++)
-    {
+    for (i = 0u; (i < msg->len) && (pos < 280u); i++) {
         line[pos] = (uint8_t)msg->text[i];
         pos++;
     }
-    for (i = 0u; (i < suffix_len) && (pos < 298u); i++)
-    {
+    for (i = 0u; (i < suffix_len) && (pos < 298u); i++) {
         line[pos] = (uint8_t)suffix[i];
         pos++;
     }
@@ -111,8 +106,7 @@ daft_status_t daft_log_write(daft_log_id_t id)
     daft_log_msg_t msg = { NULL, 0u };
     daft_status_t status = daft_log_lookup(id, &msg);
 
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_log_emit(&msg, "", 0u);
     }
     return status;
@@ -125,19 +119,16 @@ daft_status_t daft_log_write_u32(daft_log_id_t id, uint32_t value)
     size_t digit_len = 0u;
     daft_status_t status = daft_log_lookup(id, &msg);
 
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_util_u32_to_dec(digits, sizeof(digits), value,
                                       &digit_len);
     }
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         char suffix[14];
         size_t i;
 
         suffix[0] = ' ';
-        for (i = 0u; i < digit_len; i++)
-        {
+        for (i = 0u; i < digit_len; i++) {
             suffix[i + 1u] = digits[i];
         }
         status = daft_log_emit(&msg, suffix, digit_len + 1u);

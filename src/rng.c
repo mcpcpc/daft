@@ -9,8 +9,7 @@
 
 daft_status_t daft_rng_seed(daft_rng_t *rng, uint64_t seed)
 {
-    if (rng == NULL)
-    {
+    if (rng == NULL) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
     /* xorshift state shall be nonzero. */
@@ -31,8 +30,7 @@ static uint64_t daft_rng_next(daft_rng_t *rng)
 
 static daft_status_t daft_rng_u32(daft_rng_t *rng, uint32_t *out)
 {
-    if ((rng == NULL) || (out == NULL) || (rng->state == 0u))
-    {
+    if ((rng == NULL) || (out == NULL) || (rng->state == 0u)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
     *out = (uint32_t)(daft_rng_next(rng) >> 32);
@@ -44,14 +42,12 @@ daft_status_t daft_rng_range(daft_rng_t *rng, uint32_t bound, uint32_t *out)
     uint32_t raw = 0u;
     daft_status_t status;
 
-    if ((out == NULL) || (bound == 0u))
-    {
+    if ((out == NULL) || (bound == 0u)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
 
     status = daft_rng_u32(rng, &raw);
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         /* Multiply-shift range reduction: negligible bias, no modulo. */
         *out = (uint32_t)(((uint64_t)raw * (uint64_t)bound) >> 32);
     }
@@ -60,8 +56,7 @@ daft_status_t daft_rng_range(daft_rng_t *rng, uint32_t bound, uint32_t *out)
 
 daft_status_t daft_rng_unit(daft_rng_t *rng, double *out)
 {
-    if ((rng == NULL) || (out == NULL) || (rng->state == 0u))
-    {
+    if ((rng == NULL) || (out == NULL) || (rng->state == 0u)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
     /* 53 high-quality bits into [0, 1). */

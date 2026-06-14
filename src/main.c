@@ -42,16 +42,13 @@ static daft_status_t daft_setup_signals(void)
 
     sa.sa_handler = daft_handle_stop;
     sa.sa_flags = 0;
-    if (sigemptyset(&sa.sa_mask) != 0)
-    {
+    if (sigemptyset(&sa.sa_mask) != 0) {
         return DAFT_STATUS_INTERNAL_ERROR;
     }
-    if (sigaction(SIGINT, &sa, NULL) != 0)
-    {
+    if (sigaction(SIGINT, &sa, NULL) != 0) {
         return DAFT_STATUS_INTERNAL_ERROR;
     }
-    if (sigaction(SIGTERM, &sa, NULL) != 0)
-    {
+    if (sigaction(SIGTERM, &sa, NULL) != 0) {
         return DAFT_STATUS_INTERNAL_ERROR;
     }
     return DAFT_STATUS_OK;
@@ -72,19 +69,15 @@ static daft_status_t daft_setup_channels(daft_midi_t *midi, uint64_t now)
 
     /* Bounded by DAFT_LAYERS_CHANNELS. */
     for (ch = 0u; (ch < DAFT_LAYERS_CHANNELS) &&
-                  (status == DAFT_STATUS_OK); ch++)
-    {
+                  (status == DAFT_STATUS_OK); ch++) {
         status = daft_midi_program(midi, now, ch, k_program[ch]);
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             status = daft_midi_control(midi, now, ch, 7u, 100u); /* volume */
         }
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             status = daft_midi_control(midi, now, ch, 10u, k_pan[ch]);
         }
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             status = daft_midi_control(midi, now, ch, 91u, 100u); /* reverb */
         }
     }
@@ -119,8 +112,7 @@ static void daft_cc_set_targets(const daft_conductor_params_t *params)
 
     g_cc[0].target = 40.0 + (params->drone_presence * 60.0);
     /* Bounded by DAFT_CC_COUNT. */
-    for (i = 1u; i < DAFT_CC_COUNT; i++)
-    {
+    for (i = 1u; i < DAFT_CC_COUNT; i++) {
         g_cc[i].target = bright_cc;
     }
 }
@@ -131,36 +123,29 @@ static daft_status_t daft_cc_tick(daft_midi_t *midi, uint64_t now)
     daft_status_t status = DAFT_STATUS_OK;
 
     /* Bounded by DAFT_CC_COUNT. */
-    for (i = 0u; (i < DAFT_CC_COUNT) && (status == DAFT_STATUS_OK); i++)
-    {
+    for (i = 0u; (i < DAFT_CC_COUNT) && (status == DAFT_STATUS_OK); i++) {
         daft_cc_t *cc = &g_cc[i];
 
-        if ((now - cc->last_emit_ms) >= (uint64_t)DAFT_CC_INTERVAL_MS)
-        {
+        if ((now - cc->last_emit_ms) >= (uint64_t)DAFT_CC_INTERVAL_MS) {
             double step = cc->target - cc->current;
             uint8_t rounded;
 
-            if (step > DAFT_CC_STEP)
-            {
+            if (step > DAFT_CC_STEP) {
                 step = DAFT_CC_STEP;
             }
-            if (step < -DAFT_CC_STEP)
-            {
+            if (step < -DAFT_CC_STEP) {
                 step = -DAFT_CC_STEP;
             }
             cc->current += step;
             rounded = (uint8_t)(cc->current + 0.5);
-            if (rounded > 127u)
-            {
+            if (rounded > 127u) {
                 rounded = 127u;
             }
 
-            if (rounded != cc->last_sent)
-            {
+            if (rounded != cc->last_sent) {
                 status = daft_midi_control(midi, now, cc->ch, cc->ctrl,
                                            rounded);
-                if (status == DAFT_STATUS_OK)
-                {
+                if (status == DAFT_STATUS_OK) {
                     cc->last_sent = rounded;
                     cc->last_emit_ms = now;
                 }
@@ -181,8 +166,7 @@ static daft_status_t daft_weather_step(uint64_t now, daft_rng_t *rng,
     daft_conductor_params_t params;
     daft_status_t status = daft_metrics_sample(now, &sample);
 
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         (*metric_failures)++;
         (void)daft_log_write_u32(DAFT_LOG_ID_METRICS_SAMPLE_FAILED,
                                  (uint32_t)status); /* LOG-1 */
@@ -194,20 +178,16 @@ static daft_status_t daft_weather_step(uint64_t now, daft_rng_t *rng,
     *metric_failures = 0u;
 
     status = daft_weather_update(&sample, now, &weather);
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_conductor_update(&weather, now);
     }
-    if ((status == DAFT_STATUS_OK) && (weather.burst == 1))
-    {
+    if ((status == DAFT_STATUS_OK) && (weather.burst == 1)) {
         status = daft_layers_chime(now, weather.burst_mag, rng, sched);
     }
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_conductor_params(&params);
     }
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         daft_cc_set_targets(&params);
     }
     return status;
@@ -222,18 +202,15 @@ static daft_status_t daft_run(const daft_config_t *cfg, daft_rng_t *rng,
     uint32_t metric_failures = 0u;
     daft_status_t status = daft_time_now_ms(&now);
 
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
     status = daft_setup_channels(midi, now);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
     status = daft_layers_init(rng, now);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
 
@@ -249,45 +226,38 @@ static daft_status_t daft_run(const daft_config_t *cfg, daft_rng_t *rng,
         int done = 0;
         uint64_t last_sample_ms = 0u;
 
-        while ((g_stop == 0) && (done == 0) && (status == DAFT_STATUS_OK))
-        {
+        while ((g_stop == 0) && (done == 0) && (status == DAFT_STATUS_OK)) {
             status = daft_time_now_ms(&now);
 
             if ((status == DAFT_STATUS_OK) && (sim_end_ms > 0u) &&
-                (now >= sim_end_ms))
-            {
+                (now >= sim_end_ms)) {
                 (void)daft_log_write(DAFT_LOG_ID_SIM_COMPLETE); /* LOG-1 */
                 done = 1;
             }
 
             if ((status == DAFT_STATUS_OK) && (done == 0) &&
                 ((now - last_sample_ms) >=
-                 (uint64_t)DAFT_SAMPLE_INTERVAL_MS))
-            {
+                 (uint64_t)DAFT_SAMPLE_INTERVAL_MS)) {
                 status = daft_weather_step(now, rng, sched,
                                            &metric_failures);
                 last_sample_ms = now;
             }
 
-            if ((status == DAFT_STATUS_OK) && (done == 0))
-            {
+            if ((status == DAFT_STATUS_OK) && (done == 0)) {
                 status = daft_layers_tick(now, rng, sched);
             }
 
-            if ((status == DAFT_STATUS_OK) && (done == 0))
-            {
+            if ((status == DAFT_STATUS_OK) && (done == 0)) {
                 /* Commit due onsets. Bounded by the queue capacity. */
                 unsigned int pops = 0u;
                 int got = 1;
 
                 while ((status == DAFT_STATUS_OK) && (got == 1) &&
-                       (pops < DAFT_SCHED_CAP))
-                {
+                       (pops < DAFT_SCHED_CAP)) {
                     daft_sched_event_t ev;
 
                     status = daft_sched_pop_due(sched, now, &ev, &got);
-                    if ((status == DAFT_STATUS_OK) && (got == 1))
-                    {
+                    if ((status == DAFT_STATUS_OK) && (got == 1)) {
                         status = daft_voices_note_on(voices, midi, now,
                                                      ev.ch, ev.note,
                                                      ev.velocity,
@@ -297,23 +267,19 @@ static daft_status_t daft_run(const daft_config_t *cfg, daft_rng_t *rng,
                 }
             }
 
-            if ((status == DAFT_STATUS_OK) && (done == 0))
-            {
+            if ((status == DAFT_STATUS_OK) && (done == 0)) {
                 status = daft_voices_tick(voices, midi, now);
             }
-            if ((status == DAFT_STATUS_OK) && (done == 0))
-            {
+            if ((status == DAFT_STATUS_OK) && (done == 0)) {
                 status = daft_cc_tick(midi, now);
             }
-            if ((status == DAFT_STATUS_OK) && (done == 0))
-            {
+            if ((status == DAFT_STATUS_OK) && (done == 0)) {
                 status = daft_time_sleep_ms(DAFT_TICK_MS);
             }
         }
     }
 
-    if (g_stop != 0)
-    {
+    if (g_stop != 0) {
         (void)daft_log_write(DAFT_LOG_ID_SIGNAL_STOP); /* LOG-1 */
     }
     return status;
@@ -326,21 +292,17 @@ static daft_status_t daft_shutdown_midi(daft_midi_t *midi,
     daft_status_t status = daft_time_now_ms(&now);
     daft_status_t final_status = status;
 
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         uint8_t ch;
 
         status = daft_voices_all_off(voices, midi, now);
-        if (status != DAFT_STATUS_OK)
-        {
+        if (status != DAFT_STATUS_OK) {
             final_status = status;
         }
         /* Belt and braces: CC123 All Notes Off on every used channel. */
-        for (ch = 0u; ch < DAFT_LAYERS_CHANNELS; ch++)
-        {
+        for (ch = 0u; ch < DAFT_LAYERS_CHANNELS; ch++) {
             status = daft_midi_control(midi, now, ch, 123u, 0u);
-            if (status != DAFT_STATUS_OK)
-            {
+            if (status != DAFT_STATUS_OK) {
                 final_status = status;
             }
         }
@@ -348,8 +310,7 @@ static daft_status_t daft_shutdown_midi(daft_midi_t *midi,
     }
 
     status = daft_midi_close(midi, now);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         final_status = status;
     }
     return final_status;
@@ -365,55 +326,45 @@ int main(int argc, char **argv)
     int sim;
     daft_status_t status = daft_config_default(&cfg);
 
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_config_parse_args(&cfg, argc, argv);
     }
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         (void)daft_log_write(DAFT_LOG_ID_CONFIG_BAD_ARG); /* LOG-1 */
         (void)daft_log_write(DAFT_LOG_ID_USAGE);          /* LOG-1 */
         return EXIT_FAILURE;
     }
 
     sim = (cfg.sim_minutes > 0u) ? 1 : 0;
-    if ((sim == 1) && (cfg.trace_path[0] == '\0'))
-    {
+    if ((sim == 1) && (cfg.trace_path[0] == '\0')) {
         (void)daft_log_write(DAFT_LOG_ID_CONFIG_BAD_ARG); /* LOG-1 */
         (void)daft_log_write(DAFT_LOG_ID_USAGE);          /* LOG-1 */
         return EXIT_FAILURE;
     }
 
     status = daft_setup_signals();
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         (void)daft_log_write(DAFT_LOG_ID_INTERNAL_FAULT); /* LOG-1 */
         return EXIT_FAILURE;
     }
     status = daft_time_init((sim == 1) ? DAFT_TIME_FAKE : DAFT_TIME_REAL);
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_rng_seed(&rng, cfg.seed);
     }
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_sched_init(&sched);
     }
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_voices_init(&voices);
     }
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_weather_init();
     }
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         status = daft_conductor_init(cfg.root_pc, cfg.mood_dark,
                                      cfg.density_percent, &rng);
     }
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         (void)daft_log_write(DAFT_LOG_ID_INTERNAL_FAULT); /* LOG-1 */
         return EXIT_FAILURE;
     }
@@ -421,8 +372,7 @@ int main(int argc, char **argv)
     status = daft_metrics_init((sim == 1) ? DAFT_METRICS_TRACE
                                           : DAFT_METRICS_PROC,
                                (sim == 1) ? cfg.trace_path : NULL);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         (void)daft_log_write(DAFT_LOG_ID_METRICS_INIT_FAILED); /* LOG-1 */
         return EXIT_FAILURE;
     }
@@ -430,8 +380,7 @@ int main(int argc, char **argv)
     status = daft_midi_open(&midi, (sim == 1) ? DAFT_MIDI_SINK_SMF
                                               : DAFT_MIDI_SINK_STREAM,
                             cfg.midi_path);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         (void)daft_log_write(DAFT_LOG_ID_MIDI_OPEN_FAILED); /* LOG-1 */
         (void)daft_metrics_close();
         return EXIT_FAILURE;
@@ -440,8 +389,7 @@ int main(int argc, char **argv)
     (void)daft_log_write(DAFT_LOG_ID_STARTUP); /* LOG-1 */
 
     status = daft_run(&cfg, &rng, &midi, &sched, &voices);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         (void)daft_log_write_u32(DAFT_LOG_ID_MIDI_WRITE_FAILED,
                                  (uint32_t)status); /* LOG-1 */
     }
@@ -450,12 +398,10 @@ int main(int argc, char **argv)
         daft_status_t shutdown_status = daft_shutdown_midi(&midi, &voices);
         daft_status_t metrics_status = daft_metrics_close();
 
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             status = shutdown_status;
         }
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             status = metrics_status;
         }
     }

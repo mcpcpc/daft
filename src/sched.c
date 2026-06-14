@@ -6,13 +6,11 @@ daft_status_t daft_sched_init(daft_sched_t *sched)
 {
     size_t i;
 
-    if (sched == NULL)
-    {
+    if (sched == NULL) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
     /* Bounded by DAFT_SCHED_CAP. */
-    for (i = 0u; i < DAFT_SCHED_CAP; i++)
-    {
+    for (i = 0u; i < DAFT_SCHED_CAP; i++) {
         sched->slot[i].used = 0u;
     }
     return DAFT_STATUS_OK;
@@ -23,16 +21,13 @@ daft_status_t daft_sched_push(daft_sched_t *sched, uint64_t t_ms, uint8_t ch,
 {
     size_t i;
 
-    if ((sched == NULL) || (ch > 15u) || (note > 127u) || (velocity > 127u))
-    {
+    if ((sched == NULL) || (ch > 15u) || (note > 127u) || (velocity > 127u)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
 
     /* Bounded by DAFT_SCHED_CAP. */
-    for (i = 0u; i < DAFT_SCHED_CAP; i++)
-    {
-        if (sched->slot[i].used == 0u)
-        {
+    for (i = 0u; i < DAFT_SCHED_CAP; i++) {
+        if (sched->slot[i].used == 0u) {
             sched->slot[i].t_ms = t_ms;
             sched->slot[i].dur_ms = dur_ms;
             sched->slot[i].ch = ch;
@@ -51,27 +46,22 @@ daft_status_t daft_sched_pop_due(daft_sched_t *sched, uint64_t now,
     size_t i;
     size_t best = DAFT_SCHED_CAP;
 
-    if ((sched == NULL) || (out == NULL) || (got == NULL))
-    {
+    if ((sched == NULL) || (out == NULL) || (got == NULL)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
 
     *got = 0;
     /* Bounded by DAFT_SCHED_CAP. */
-    for (i = 0u; i < DAFT_SCHED_CAP; i++)
-    {
-        if ((sched->slot[i].used == 1u) && (sched->slot[i].t_ms <= now))
-        {
+    for (i = 0u; i < DAFT_SCHED_CAP; i++) {
+        if ((sched->slot[i].used == 1u) && (sched->slot[i].t_ms <= now)) {
             if ((best == DAFT_SCHED_CAP) ||
-                (sched->slot[i].t_ms < sched->slot[best].t_ms))
-            {
+                (sched->slot[i].t_ms < sched->slot[best].t_ms)) {
                 best = i;
             }
         }
     }
 
-    if (best < DAFT_SCHED_CAP)
-    {
+    if (best < DAFT_SCHED_CAP) {
         *out = sched->slot[best];
         sched->slot[best].used = 0u;
         *got = 1;
@@ -84,21 +74,17 @@ daft_status_t daft_sched_onset_near(const daft_sched_t *sched, uint64_t t_ms,
 {
     size_t i;
 
-    if ((sched == NULL) || (near == NULL))
-    {
+    if ((sched == NULL) || (near == NULL)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
 
     *near = 0;
     /* Bounded by DAFT_SCHED_CAP. */
-    for (i = 0u; i < DAFT_SCHED_CAP; i++)
-    {
-        if (sched->slot[i].used == 1u)
-        {
+    for (i = 0u; i < DAFT_SCHED_CAP; i++) {
+        if (sched->slot[i].used == 1u) {
             uint64_t a = sched->slot[i].t_ms;
             uint64_t diff = (a > t_ms) ? (a - t_ms) : (t_ms - a);
-            if (diff <= (uint64_t)window_ms)
-            {
+            if (diff <= (uint64_t)window_ms) {
                 *near = 1;
             }
         }

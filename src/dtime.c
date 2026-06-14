@@ -25,8 +25,7 @@ static daft_status_t daft_time_read_monotonic(uint64_t *out_ms)
 {
     struct timespec ts;
 
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
-    {
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
         return DAFT_STATUS_IO_ERROR;
     }
     *out_ms = ((uint64_t)ts.tv_sec * 1000u) + ((uint64_t)ts.tv_nsec / 1000000u);
@@ -37,8 +36,7 @@ daft_status_t daft_time_init(daft_time_mode_t mode)
 {
     daft_status_t status = DAFT_STATUS_OK;
 
-    if ((mode != DAFT_TIME_REAL) && (mode != DAFT_TIME_FAKE))
-    {
+    if ((mode != DAFT_TIME_REAL) && (mode != DAFT_TIME_FAKE)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
 
@@ -46,12 +44,10 @@ daft_status_t daft_time_init(daft_time_mode_t mode)
     g_time.fake_ms = 0u;
     g_time.base_ms = 0u;
 
-    if (mode == DAFT_TIME_REAL)
-    {
+    if (mode == DAFT_TIME_REAL) {
         status = daft_time_read_monotonic(&g_time.base_ms);
     }
-    if (status == DAFT_STATUS_OK)
-    {
+    if (status == DAFT_STATUS_OK) {
         g_time.initialized = 1;
     }
     return status;
@@ -61,25 +57,19 @@ daft_status_t daft_time_now_ms(uint64_t *out_ms)
 {
     daft_status_t status = DAFT_STATUS_OK;
 
-    if (out_ms == NULL)
-    {
+    if (out_ms == NULL) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
-    if (g_time.initialized == 0)
-    {
+    if (g_time.initialized == 0) {
         return DAFT_STATUS_UNAVAILABLE;
     }
 
-    if (g_time.mode == DAFT_TIME_FAKE)
-    {
+    if (g_time.mode == DAFT_TIME_FAKE) {
         *out_ms = g_time.fake_ms;
-    }
-    else
-    {
+    } else {
         uint64_t now = 0u;
         status = daft_time_read_monotonic(&now);
-        if (status == DAFT_STATUS_OK)
-        {
+        if (status == DAFT_STATUS_OK) {
             *out_ms = now - g_time.base_ms;
         }
     }
@@ -88,13 +78,11 @@ daft_status_t daft_time_now_ms(uint64_t *out_ms)
 
 daft_status_t daft_time_sleep_ms(uint32_t ms)
 {
-    if (g_time.initialized == 0)
-    {
+    if (g_time.initialized == 0) {
         return DAFT_STATUS_UNAVAILABLE;
     }
 
-    if (g_time.mode == DAFT_TIME_FAKE)
-    {
+    if (g_time.mode == DAFT_TIME_FAKE) {
         g_time.fake_ms += (uint64_t)ms;
         return DAFT_STATUS_OK;
     }
@@ -111,15 +99,13 @@ daft_status_t daft_time_sleep_ms(uint32_t ms)
 
         /* Bounded retry on interruption; clock_nanosleep returns the
          * error number directly (it does not set errno). */
-        do
-        {
+        do {
             struct timespec rem = { 0, 0 };
             /* cppcheck-suppress misra-c2012-17.3 ; clock_nanosleep is
              * declared in <time.h> (POSIX.1-2001 Timers); the analyzer
              * does not expand system headers. */
             rc = clock_nanosleep(CLOCK_MONOTONIC, 0, &req, &rem);
-            if (rc == EINTR)
-            {
+            if (rc == EINTR) {
                 req = rem;
             }
             attempts++;

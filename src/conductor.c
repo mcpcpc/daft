@@ -30,15 +30,13 @@ daft_status_t daft_conductor_init(uint32_t root_pc, uint32_t mood_dark,
     daft_status_t status;
 
     if ((root_pc > 11u) || (mood_dark > 1u) || (rng == NULL) ||
-        (density_percent < 25u) || (density_percent > 400u))
-    {
+        (density_percent < 25u) || (density_percent > 400u)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
 
     /* Breathing LFO period: 7..15 minutes, randomized once per run. */
     status = daft_rng_range(rng, 480000u, &breath);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
 
@@ -64,33 +62,27 @@ daft_status_t daft_conductor_update(const daft_weather_t *weather,
     double breath;
     double density;
 
-    if (weather == NULL)
-    {
+    if (weather == NULL) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
-    if (g_cond.initialized == 0)
-    {
+    if (g_cond.initialized == 0) {
         return DAFT_STATUS_UNAVAILABLE;
     }
 
     /* Modal drift: sustained network activity brightens the palette,
      * one small step at a time - no jarring transitions. */
     target = g_cond.base_darkness + 0.25 - (0.5 * weather->net_level);
-    if (target < 0.0)
-    {
+    if (target < 0.0) {
         target = 0.0;
     }
-    if (target > 1.0)
-    {
+    if (target > 1.0) {
         target = 1.0;
     }
     step = target - g_cond.darkness;
-    if (step > DAFT_DARKNESS_STEP)
-    {
+    if (step > DAFT_DARKNESS_STEP) {
         step = DAFT_DARKNESS_STEP;
     }
-    if (step < -DAFT_DARKNESS_STEP)
-    {
+    if (step < -DAFT_DARKNESS_STEP) {
         step = -DAFT_DARKNESS_STEP;
     }
     g_cond.darkness += step;
@@ -101,12 +93,10 @@ daft_status_t daft_conductor_update(const daft_weather_t *weather,
                                              g_cond.breath_period_ms)));
     density = g_cond.user_scale * (0.5 + (1.5 * weather->cpu_level)) *
               breath;
-    if (density < 0.2)
-    {
+    if (density < 0.2) {
         density = 0.2;
     }
-    if (density > 2.5)
-    {
+    if (density > 2.5) {
         density = 2.5;
     }
 
@@ -124,12 +114,10 @@ daft_status_t daft_conductor_update(const daft_weather_t *weather,
 
 daft_status_t daft_conductor_params(daft_conductor_params_t *out)
 {
-    if (out == NULL)
-    {
+    if (out == NULL) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
-    if (g_cond.initialized == 0)
-    {
+    if (g_cond.initialized == 0) {
         return DAFT_STATUS_UNAVAILABLE;
     }
     *out = g_cond.params;
@@ -146,10 +134,8 @@ static size_t daft_degree_of(uint8_t note, uint32_t root_pc)
     uint32_t pc = ((uint32_t)note + 120u - root_pc) % 12u;
     size_t i;
 
-    for (i = 0u; i < DAFT_PENT_DEGREES; i++)
-    {
-        if ((uint32_t)k_degree[i] == pc)
-        {
+    for (i = 0u; i < DAFT_PENT_DEGREES; i++) {
+        if ((uint32_t)k_degree[i] == pc) {
             return i;
         }
     }
@@ -181,22 +167,18 @@ daft_status_t daft_conductor_choose_note(daft_rng_t *rng, uint8_t last_note,
     uint8_t note;
     daft_status_t status;
 
-    if ((rng == NULL) || (out == NULL) || (lo > hi) || (hi > 127u))
-    {
+    if ((rng == NULL) || (out == NULL) || (lo > hi) || (hi > 127u)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
-    if (g_cond.initialized == 0)
-    {
+    if (g_cond.initialized == 0) {
         return DAFT_STATUS_UNAVAILABLE;
     }
 
     /* Collect pentatonic candidates in the register window.
      * Bounded by the window size and DAFT_CAND_CAP. */
-    for (note = lo; (note <= hi) && (n_cand < DAFT_CAND_CAP); note++)
-    {
+    for (note = lo; (note <= hi) && (n_cand < DAFT_CAND_CAP); note++) {
         size_t deg = daft_degree_of(note, g_cond.root_pc);
-        if (deg < DAFT_PENT_DEGREES)
-        {
+        if (deg < DAFT_PENT_DEGREES) {
             double w = k_weight_bright[deg] +
                        (g_cond.darkness *
                         (k_weight_dark[deg] - k_weight_bright[deg]));
@@ -204,35 +186,28 @@ daft_status_t daft_conductor_choose_note(daft_rng_t *rng, uint8_t last_note,
             weight[n_cand] = w;
             n_cand++;
         }
-        if (note == 127u)
-        {
+        if (note == 127u) {
             break;
         }
     }
-    if (n_cand == 0u)
-    {
+    if (n_cand == 0u) {
         return DAFT_STATUS_OUT_OF_RANGE;
     }
 
     /* Voice leading: prefer small scale-step moves from the last note. */
-    if (last_note <= 127u)
-    {
+    if (last_note <= 127u) {
         uint8_t best_dist = 255u;
-        for (i = 0u; i < n_cand; i++)
-        {
+        for (i = 0u; i < n_cand; i++) {
             uint8_t d = (cand[i] > last_note) ? (uint8_t)(cand[i] - last_note)
                                               : (uint8_t)(last_note - cand[i]);
-            if (d < best_dist)
-            {
+            if (d < best_dist) {
                 best_dist = d;
                 last_idx = i;
             }
         }
     }
-    for (i = 0u; i < n_cand; i++)
-    {
-        if (last_idx < DAFT_CAND_CAP)
-        {
+    for (i = 0u; i < n_cand; i++) {
+        if (last_idx < DAFT_CAND_CAP) {
             size_t d = (i > last_idx) ? (i - last_idx) : (last_idx - i);
             weight[i] *= (d < 6u) ? k_walk[d] : k_walk[5];
         }
@@ -240,18 +215,15 @@ daft_status_t daft_conductor_choose_note(daft_rng_t *rng, uint8_t last_note,
     }
 
     status = daft_rng_unit(rng, &pick);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
     pick *= total;
 
     *out = cand[n_cand - 1u];
-    for (i = 0u; i < n_cand; i++)
-    {
+    for (i = 0u; i < n_cand; i++) {
         cum += weight[i];
-        if (pick < cum)
-        {
+        if (pick < cum) {
             *out = cand[i];
             break;
         }
@@ -265,18 +237,15 @@ daft_status_t daft_conductor_choose_drone(daft_rng_t *rng, uint8_t *out)
     daft_status_t status;
     uint8_t root_note;
 
-    if ((rng == NULL) || (out == NULL))
-    {
+    if ((rng == NULL) || (out == NULL)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
-    if (g_cond.initialized == 0)
-    {
+    if (g_cond.initialized == 0) {
         return DAFT_STATUS_UNAVAILABLE;
     }
 
     status = daft_rng_unit(rng, &pick);
-    if (status != DAFT_STATUS_OK)
-    {
+    if (status != DAFT_STATUS_OK) {
         return status;
     }
 

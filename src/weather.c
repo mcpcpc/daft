@@ -45,8 +45,7 @@ static void daft_channel_init(daft_channel_t *ch, double tau_s,
     ch->has_ema = 0;
     ch->cur_bucket = 0u;
     /* Bounded by DAFT_WEATHER_BUCKETS. */
-    for (i = 0u; i < DAFT_WEATHER_BUCKETS; i++)
-    {
+    for (i = 0u; i < DAFT_WEATHER_BUCKETS; i++) {
         ch->bucket_used[i] = 0u;
     }
 }
@@ -61,32 +60,24 @@ static double daft_channel_update(daft_channel_t *ch, double raw,
     double level;
     size_t i;
 
-    if (ch->has_ema == 0)
-    {
+    if (ch->has_ema == 0) {
         ch->ema = raw;
         ch->has_ema = 1;
-    }
-    else
-    {
+    } else {
         ch->ema += ch->alpha * (raw - ch->ema);
     }
 
-    if ((ch->bucket_used[idx] == 0u) || (bucket != ch->cur_bucket))
-    {
+    if ((ch->bucket_used[idx] == 0u) || (bucket != ch->cur_bucket)) {
         /* Entering a (possibly recycled) bucket: reset it. */
         ch->bucket_min[idx] = ch->ema;
         ch->bucket_max[idx] = ch->ema;
         ch->bucket_used[idx] = 1u;
         ch->cur_bucket = bucket;
-    }
-    else
-    {
-        if (ch->ema < ch->bucket_min[idx])
-        {
+    } else {
+        if (ch->ema < ch->bucket_min[idx]) {
             ch->bucket_min[idx] = ch->ema;
         }
-        if (ch->ema > ch->bucket_max[idx])
-        {
+        if (ch->ema > ch->bucket_max[idx]) {
             ch->bucket_max[idx] = ch->ema;
         }
     }
@@ -94,32 +85,25 @@ static double daft_channel_update(daft_channel_t *ch, double raw,
     lo = ch->ema;
     hi = ch->ema;
     /* Bounded by DAFT_WEATHER_BUCKETS. */
-    for (i = 0u; i < DAFT_WEATHER_BUCKETS; i++)
-    {
-        if (ch->bucket_used[i] == 1u)
-        {
-            if (ch->bucket_min[i] < lo)
-            {
+    for (i = 0u; i < DAFT_WEATHER_BUCKETS; i++) {
+        if (ch->bucket_used[i] == 1u) {
+            if (ch->bucket_min[i] < lo) {
                 lo = ch->bucket_min[i];
             }
-            if (ch->bucket_max[i] > hi)
-            {
+            if (ch->bucket_max[i] > hi) {
                 hi = ch->bucket_max[i];
             }
         }
     }
-    if ((hi - lo) < ch->range_floor)
-    {
+    if ((hi - lo) < ch->range_floor) {
         hi = lo + ch->range_floor;
     }
 
     level = (ch->ema - lo) / (hi - lo);
-    if (level < 0.0)
-    {
+    if (level < 0.0) {
         level = 0.0;
     }
-    if (level > 1.0)
-    {
+    if (level > 1.0) {
         level = 1.0;
     }
     return level;
@@ -143,12 +127,10 @@ daft_status_t daft_weather_update(const daft_metrics_sample_t *sample,
 {
     double raw_net;
 
-    if ((sample == NULL) || (out == NULL))
-    {
+    if ((sample == NULL) || (out == NULL)) {
         return DAFT_STATUS_INVALID_ARGUMENT;
     }
-    if (g_weather.initialized == 0)
-    {
+    if (g_weather.initialized == 0) {
         return DAFT_STATUS_UNAVAILABLE;
     }
 
@@ -175,8 +157,7 @@ daft_status_t daft_weather_update(const daft_metrics_sample_t *sample,
 
         if ((g_weather.burst_primed == 1) && (raw_net > threshold) &&
             ((g_weather.last_burst_ms == 0u) ||
-             (since >= (uint64_t)DAFT_WEATHER_BURST_GAP_MS)))
-        {
+             (since >= (uint64_t)DAFT_WEATHER_BURST_GAP_MS))) {
             double mag = raw_net /
                          ((6.0 * g_weather.net.ema) +
                           DAFT_WEATHER_BURST_FLOOR);
