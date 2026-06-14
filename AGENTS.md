@@ -438,6 +438,13 @@ docs/deviations/
 
 ## Code Structure Rules
 
+- Use **One True Brace Style (1TBS)**: the opening brace of every control-flow
+  block (`if`, `else`, `else if`, `for`, `while`, `do`, `switch`) appears on
+  the same line as the keyword, separated by a single space.  The `else` /
+  `else if` keyword follows immediately after the closing brace of the previous
+  block on the same line (`} else {`).  Function-definition opening braces
+  remain on their own line.  Bare scoping blocks used for MISRA variable-scope
+  compliance retain their own-line brace.
 - Keep functions short and single-purpose.
 - Prefer internal linkage with `static` for file-local functions and objects.
 - Avoid global mutable state.
