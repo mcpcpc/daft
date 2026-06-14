@@ -1,0 +1,167 @@
+.TH DAFT 1 "June 2026" "daft" "User Commands"
+.SH NAME
+daft \- generative ambient MIDI engine driven by system resources
+.SH SYNOPSIS
+.B daft
+.RB [ \-\-midi\-out
+.IR PATH ]
+.RB [ \-\-seed
+.IR N ]
+.RB [ \-\-root
+.IR 0..11 ]
+.RB [ \-\-mood
+.IR bright | dark ]
+.RB [ \-\-density
+.IR PERCENT ]
+.RB [ \-\-simulate
+.IR TRACE ]
+.RB [ \-\-sim\-minutes
+.IR N ]
+.SH DESCRIPTION
+.B daft
+is a headless daemon that plays endless, sparse, ambient generative music
+in the manner of Brian Eno's
+.IR "Music for Airports" .
+Six independent voice layers (a drone, two harmonic beds, two melodic
+fragments, and a chime) cycle with mutually incommensurate periods and
+probabilistically select notes from a pentatonic palette over a root
+drone, so any vertical combination of sounding notes stays consonant.
+.PP
+The machine's vital signs act as slowly integrated weather that steers
+the music indirectly:
+.IP \(bu 3
+CPU load drives overall event density, multiplied by an autonomous
+breathing tide with a 7\(en15 minute period.
+.IP \(bu 3
+Memory pressure pulls the upper voices into lower, darker registers.
+.IP \(bu 3
+Sustained network activity brightens the mode emphasis and timbre
+(continuous controller 74).
+.IP \(bu 3
+Disk activity swells the drone's expression (continuous controller 11).
+.PP
+One mapping is deliberately legible: a network traffic burst may ring a
+single distant chime, probabilistically and rate-limited to at most one
+every eight seconds.
+.PP
+Metrics are read from
+.I /proc
+and normalized adaptively against a rolling 30-minute history, so the
+program is musically alive on an idle laptop and a loaded server alike.
+.PP
+Output is a raw MIDI byte stream written with plain
+.BR write (2)
+to the path given by
+.B \-\-midi\-out
+\(em a rawmidi or OSS MIDI device, a FIFO, or a regular file. The program
+links against no MIDI or audio libraries. Route the stream to any
+General MIDI capable synthesizer.
+.SH OPTIONS
+Options are applied in command-line order; later options override
+earlier ones.
+.TP
+.BI \-\-midi\-out " PATH"
+Where to write MIDI bytes. In live mode this is opened for writing as a
+stream; in simulation mode a Standard MIDI File is created at this path.
+Default:
+.IR /dev/midi .
+.TP
+.BI \-\-seed " N"
+Decimal seed for the deterministic pseudo-random number generator.
+Identical seed and identical metric input produce identical music.
+.TP
+.BI \-\-root " 0..11"
+Pitch class of the tonal root: 0 = C, 1 = C#, ... 5 = F (default), ...
+11 = B.
+.TP
+.BI \-\-mood " bright\fR|\fPdark"
+Base palette emphasis.
+.B bright
+(default) leans on the root and fifth;
+.B dark
+emphasizes the relative minor over the same pitch-class set. The mood
+also drifts slowly at runtime with network weather.
+.TP
+.BI \-\-density " PERCENT"
+Overall event-density scale, 25\(en400 (default 100).
+.TP
+.BI \-\-simulate " TRACE"
+Run in deterministic simulation: metrics come from the CSV file
+.I TRACE
+instead of
+.IR /proc ,
+time is a fake clock that fast-forwards, and output is a Standard MIDI
+File. Eight hours render in well under a second.
+.TP
+.BI \-\-sim\-minutes " N"
+Simulated duration in minutes, 1\(en6000. Defaults to 480 (eight hours)
+when
+.B \-\-simulate
+is given.
+.SH TRACE FORMAT
+Each simulation trace line holds five comma-separated unsigned integers:
+.PP
+.RS
+.EX
+t_seconds,cpu_permille,mem_permille,net_Bps,disk_sps
+.EE
+.RE
+.PP
+Values hold until the next timestamped line. Lines not beginning with a
+digit (headers, comments) are ignored.
+.SH SIGNALS
+On
+.B SIGINT
+or
+.B SIGTERM
+the daemon releases every sounding note, sends All Notes Off
+(controller 123) on every channel, finalizes the output, and exits.
+.SH EXIT STATUS
+.TP
+.B 0
+Clean shutdown (signal or completed simulation).
+.TP
+.B 1
+Invalid arguments or runtime failure (the cause is logged to standard
+error with a fixed message ID).
+.SH EXAMPLES
+Play live through the kernel's virtual MIDI card:
+.PP
+.RS
+.EX
+# modprobe snd-virmidi
+# daft &
+.EE
+.RE
+.PP
+then connect the virtual rawmidi port to a software synthesizer such as
+fluidsynth(1).
+.PP
+Render and audit a simulated eight-hour day:
+.PP
+.RS
+.EX
+$ tools/gen_trace.sh > trace.csv
+$ daft --simulate trace.csv --midi-out day.mid --seed 42
+$ tools/smfcheck day.mid 5
+.EE
+.RE
+.PP
+A darker palette rooted on D, slightly busier:
+.PP
+.RS
+.EX
+$ daft --root 2 --mood dark --density 150
+.EE
+.RE
+.SH FILES
+.TP
+.I /dev/midi
+Default MIDI output path (OSS MIDI emulation; provided on Linux by the
+snd-virmidi or snd-seq-oss modules, or by real MIDI hardware).
+.TP
+.IR /proc/stat ", " /proc/meminfo ", " /proc/net/dev ", " /proc/diskstats
+Live metric sources.
+.SH SEE ALSO
+.BR fluidsynth (1),
+.BR write (2)
